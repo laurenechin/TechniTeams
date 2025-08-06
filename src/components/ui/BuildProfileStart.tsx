@@ -3,37 +3,58 @@ import {
   Heading,
   Text,
   Button,
-  HStack
+  VStack,
+  HStack,
+  Container,
+  useColorModeValue,
 } from "@chakra-ui/react";
 
 const BuildProfileStart = () => {
+  const bg = useColorModeValue("gray.50", "gray.800"); // light/dark mode support
+
   return (
-    <Box p={8} maxW="800px" mx="auto">
-      <Heading as="h1" size="xl" mb={4}>
-        Build Your Profile
-      </Heading>
+    <Box bg={bg} minH="100vh" py={10}>
+      <Container maxW="3xl">
+        {/* Top Nav (placeholder for now) */}
+        <HStack spacing={4} justify="flex-end" mb={6}>
+          <Button variant="ghost" colorScheme="gray" fontWeight="medium">
+            Status & Skills
+          </Button>
+          <Button variant="ghost" colorScheme="gray" fontWeight="medium">
+            Roles
+          </Button>
+          <Button variant="ghost" colorScheme="gray" fontWeight="medium">
+            Personality
+          </Button>
+        </HStack>
 
-      <Text fontSize="md" mb={6}>
-        Let’s get started with some basic info.
-      </Text>
+        {/* Main Content */}
+        <Heading as="h1" size="2xl" mb={4} color="teal.600">
+          Build Your Profile
+        </Heading>
 
-      <Box display="flex" flexDirection="column" gap="1rem">
-        <Button colorScheme="teal" variant="outline" size="lg">
-          Start With Status & Skills
-        </Button>
-        <Button colorScheme="teal" variant="outline" size="lg">
-          Team Preferences
-        </Button>
-        <Button colorScheme="teal" variant="outline" size="lg">
-          Bio Prompts & Tags
-        </Button>
+        <Text fontSize="lg" mb={8} color="gray.600">
+          Let’s get started with some basic info.
+        </Text>
 
-        <HStack justify="flex-end" pt={4}>
+        <VStack spacing={4} align="stretch">
+          <Button colorScheme="teal" variant="solid" size="lg">
+            Start With Status & Skills
+          </Button>
+          <Button colorScheme="teal" variant="solid" size="lg">
+            Team Preferences
+          </Button>
+          <Button colorScheme="teal" variant="solid" size="lg">
+            Bio Prompts & Tags
+          </Button>
+        </VStack>
+
+        <HStack justify="flex-end" pt={10}>
           <Button colorScheme="blue" size="md">
             Continue
           </Button>
         </HStack>
-      </Box>
+      </Container>
     </Box>
   );
 };
