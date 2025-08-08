@@ -59,15 +59,13 @@ const BuildProfileSkills = () => {
                 textUnderlineOffset: "6px",
                 transform: "scale(1.1)",
               }}
-              onClick={() => {
-                if (tab === "Skills") {
-                  navigate("/build-profile-skills"); // ✅ dash version
-                } else {
-                  navigate(`/build-profile/${tab.toLowerCase()}`);
-                }
-              }}
               style={{
                 textDecoration: tab === "Skills" ? "underline" : "none",
+              }}
+              onClick={() => {
+                if (tab === "Start") navigate("/build/start");
+                if (tab === "Skills") navigate("/build/skills");
+                if (tab === "Roles") navigate("/build/roles"); // placeholder for when Roles page is ready
               }}
             >
               {tab}
@@ -106,9 +104,7 @@ const BuildProfileSkills = () => {
                   _hover={{
                     bg: languages.includes(lang) ? "blue.600" : "gray.100",
                   }}
-                  onClick={() =>
-                    toggleSelection(lang, languages, setLanguages)
-                  }
+                  onClick={() => toggleSelection(lang, languages, setLanguages)}
                 >
                   {lang}
                 </Box>
@@ -208,7 +204,7 @@ const BuildProfileSkills = () => {
             py={3}
             _hover={{ textDecoration: "underline" }}
             cursor="pointer"
-            onClick={() => navigate("/build-profile/roles")}
+            onClick={() => navigate("/build/roles")}
           >
             Next →
           </Box>
