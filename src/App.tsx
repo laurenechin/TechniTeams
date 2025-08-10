@@ -1,6 +1,9 @@
-// src/App.tsx
-import { Routes, Route } from "react-router-dom";
-import HomePage from "./components/HomePage";
+import { BrowserRouter as Router, Routes, Route} from "react-router-dom"
+import HomePage from "./components/pages/HomePage"
+import LogInPage from "./components/pages/LogIn"
+import SignUpPage from "./components/pages/SignUp"
+import ForgotPassPage from "./components/pages/ForgotPass"
+import DashboardPage from "./components/pages/Dashboard"
 import BuildProfileStart from "./components/ui/BuildProfileStart";
 import BuildProfileSkills from "./components/ui/BuildProfileSkills";
 import BuildProfileRoles from "./components/ui/BuildProfileRoles";
@@ -9,17 +12,22 @@ import BuildProfileStatus from "./components/ui/BuildProfileStatus";
 import BuildProfileCongrats from "./components/ui/BuildProfileCongrats";
 
 function App() {
+
   return (
-    <Routes>
-      <Route path="/" element={<HomePage />} />
-      <Route path="/build/start" element={<BuildProfileStart />} />
-      <Route path="/build/skills" element={<BuildProfileSkills />} />
-      <Route path="/build/roles" element={<BuildProfileRoles />} />
-      <Route path="/build/personality" element={<BuildProfilePersonality />} />
-      <Route path="/build/status" element={<BuildProfileStatus />} />
-      <Route path="/build/congrats" element={<BuildProfileCongrats />} />
-    </Routes>
-  );
+      <Routes>
+        <Route path="/" element={<DashboardPage />} />
+        <Route path="/login" element={<LogInPage />} />
+        <Route path="/signup" element={<SignUpPage />} />
+        <Route path="/forgotpassword" element={<ForgotPassPage />} />
+        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/build/start" element={<BuildProfileStart />} />
+        <Route path="/build/skills" element={<BuildProfileSkills />} />
+        <Route path="/build/roles" element={<BuildProfileRoles />} />
+        <Route path="/build/personality" element={<BuildProfilePersonality />} />
+        <Route path="/build/status" element={<BuildProfileStatus />} />
+        <Route path="/build/congrats" element={<BuildProfileCongrats />} />
+      </Routes>
+  ) 
 }
 
 export default App;
