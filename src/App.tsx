@@ -1,6 +1,3 @@
-// import { useEffect, useState } from "react";
-// import { onAuthStateChanged, User } from "firebase/auth";
-// import { auth } from "./firebase";
 import { BrowserRouter as Router, Routes, Route} from "react-router-dom"
 import HomePage from "./components/pages/HomePage"
 import LogInPage from "./components/pages/LogIn"

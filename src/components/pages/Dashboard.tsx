@@ -5,7 +5,6 @@ import {
     Drawer,
     Portal,
     Stack,
-    type StackProps,
     Checkmark,
     TreeView,
     createTreeCollection,
@@ -18,27 +17,8 @@ import {
     Badge, 
     Flex
 } from "@chakra-ui/react";
-import { useState, useRef, forwardRef } from "react";
+import { useState, useRef } from "react";
 import { LuSquareMinus, LuSquarePlus } from "react-icons/lu"
-
-const DrawerContainer = forwardRef<HTMLDivElement, StackProps>(
-  function DrawerContainer(props, ref) {
-    return (
-      <Stack
-        pos="relative"
-        overflow="hidden"
-        align="flex-start"
-        p="8"
-        w="100vw" 
-        h="100vh"
-        layerStyle="fill.subtle"
-        outline="2px solid gray"
-        ref={ref}
-        {...props}
-      />
-    );
-  }
-);
 
 const TreeNodeCheckbox = (props: TreeView.NodeCheckboxProps) => {
     const nodeState = useTreeViewNodeContext()
@@ -123,74 +103,66 @@ function ProfileCard({ name, techniEnv, track, tags, bio }: any) {
             borderRadius="lg"
             overflow="hidden"
             p={4}
-            bg="white"
             shadow="md"
-            w="300px"
+            w="280px"
+            display="flex"
+            flexDirection="column"
+            justifyContent="space-between"
+            bg="whiteAlpha.900"
         >
-            <Flex align="center" mb={3}>
-                <Avatar.Root>
+            <Flex align="center" direction="column" mb={3}>
+                <Avatar.Root mb={3} size="2xl">
                     <Avatar.Fallback name={name} />
                 </Avatar.Root>
-                <Box>
-                    <Text fontWeight={"bold"}>{name}</Text>
-                    <Text fontSize="sm" color="gray.500">
-                        {techniEnv} | {track}
-                    </Text>
-                </Box>
-            </Flex>
+                <Text fontWeight={"bold"} textAlign="center" fontSize="lg">{name}</Text>
+                <Text fontSize="md" color="gray.500" textAlign="center">
+                    {techniEnv} | {track}
+                </Text>
 
-            <Flex wrap="wrap" gap={2} mb={3}>
+            </Flex>
+                    
+           
+            <Flex wrap="wrap" gap={2} justify="center" mb={3}>
                 {tags.map((tag: string, index:number) => (
-                    <Badge key={index} colorScheme="blue" px={2} py={1} borderRadius="full">
+                    <Badge key={index} bg="#2970c6ff" color="white" fontSize="sm" px={2} py={1} borderRadius="full">
                         {tag}
                     </Badge> 
                 ))}
             </Flex>
 
             {showBio && (
-                <Text fontSize="sm" mb={3}>
+                <Text fontSize="sm" mb={3} mt={3} color="gray.800">
                     {bio}
                 </Text>
             )}
-            <Button size="sm" onClick={() => setShowBio(!showBio)}>
+            <Text as="button" alignSelf="flex-end" mt={3} fontSize="sm" color="gray.800" _hover={{ textDecoration: "underline" }} onClick={() => setShowBio(!showBio)}>
                 {showBio ? "hide bio" : "see bio"}
-            </Button>
+            </Text>
         </Box>
     );
 }
 
-function Dashboard() {
-    const profiles = [
-        {
-            name: "Lauren Chin",
-            techniEnv: "In-Person",
-            track: "Beginner",
-            tags: ["React", "HTML/CSS"],
-            bio: "beginner hacker interested in product design"
-        },
-        {
-            name: "Lauren Chin",
-            techniEnv: "In-Person",
-            track: "Beginner",
-            tags: ["React", "HTML/CSS"],
-            bio: "beginner hacker interested in product design"
-        },
-        {
-            name: "Lauren Chin",
-            techniEnv: "In-Person",
-            track: "Beginner",
-            tags: ["React", "HTML/CSS"],
-            bio: "beginner hacker interested in product design"
-        }
-    ];
-
+function Dashboard({profiles}: { profiles: any[] }) {
     return (
-        <Box p={6} overflowY="auto" maxH="calc(100vh-100px)">
-            <Flex wrap="wrap" gap={6} justify="flex-start">
-                {profiles.map((profile, index) => (
-                    <ProfileCard key={index} {...profile} />
-                ))}
+        <Box p={8} overflowY="auto" h="100vh" bg="transparent" mx="auto">
+            <Flex direction="column" align="center" mb={8}>
+                <Box textAlign="center">
+                    <Text fontSize="5xl" fontWeight="black" color="#5A5EA7">
+                        Dashboard
+                    </Text>
+                    <Text fontSize="xl" fontWeight="semibold" color="#5A5EA7" mb={20}>
+                        Browse hacker profiles we think you'd match perfectly with!
+                    </Text>
+                </Box>
             </Flex>
+
+            <Box maxH="70vh" overflowY="auto">
+                <Flex wrap="wrap" gap={6} justify="center" align="flex-start">
+                    {profiles.map((profile, index) => (
+                        <ProfileCard key={index} {...profile} />
+                    ))}
+                </Flex>
+            </Box>
         </Box>
     )
 }
@@ -228,20 +200,116 @@ export default function DrawerFeature() {
         );
     };
 
+    const profiles = [
+        {
+            name: "Lauren Chin",
+            techniEnv: "In-Person",
+            track: "Beginner",
+            tags: ["React", "HTML/CSS"],
+            bio: "beginner hacker interested in product design"
+        },
+        {
+            name: "Lauren Chin",
+            techniEnv: "In-Person",
+            track: "Beginner",
+            tags: ["React", "HTML/CSS", "filler", "filler", "filler", "filler"],
+            bio: "beginner hacker interested in product design"
+        },
+        {
+            name: "Lauren Chin",
+            techniEnv: "In-Person",
+            track: "Beginner",
+            tags: ["React", "HTML/CSS"],
+            bio: "beginner hacker interested in product design"
+        },
+        {
+            name: "Lauren Chin",
+            techniEnv: "In-Person",
+            track: "Beginner",
+            tags: ["React", "HTML/CSS", "filler", "filler", "filler", "filler"],
+            bio: "beginner hacker interested in product design"
+        },
+        {
+            name: "Lauren Chin",
+            techniEnv: "In-Person",
+            track: "Beginner",
+            tags: ["React", "HTML/CSS", "filler", "filler", "filler", "filler"],
+            bio: "beginner hacker interested in product design"
+        },
+        {
+            name: "Lauren Chin",
+            techniEnv: "In-Person",
+            track: "Beginner",
+            tags: ["React", "HTML/CSS", "filler", "filler", "filler", "filler"],
+            bio: "beginner hacker interested in product design"
+        },
+        {
+            name: "Lauren Chin",
+            techniEnv: "In-Person",
+            track: "Beginner",
+            tags: ["React", "HTML/CSS", "filler", "filler", "filler", "filler"],
+            bio: "beginner hacker interested in product design"
+        },
+        {
+            name: "Lauren Chin",
+            techniEnv: "In-Person",
+            track: "Beginner",
+            tags: ["React", "HTML/CSS", "filler", "filler", "filler", "filler"],
+            bio: "beginner hacker interested in product design"
+        },
+        {
+            name: "Lauren Chin",
+            techniEnv: "In-Person",
+            track: "Beginner",
+            tags: ["React", "HTML/CSS", "filler", "filler", "filler", "filler"],
+            bio: "beginner hacker interested in product design"
+        },
+        {
+            name: "Lauren Chin",
+            techniEnv: "In-Person",
+            track: "Beginner",
+            tags: ["React", "HTML/CSS", "filler", "filler", "filler", "filler"],
+            bio: "beginner hacker interested in product design"
+        },
+        {
+            name: "Lauren Chin",
+            techniEnv: "In-Person",
+            track: "Beginner",
+            tags: ["React", "HTML/CSS", "filler", "filler", "filler", "filler"],
+            bio: "beginner hacker interested in product design"
+        },
+        {
+            name: "Lauren Chin",
+            techniEnv: "In-Person",
+            track: "Beginner",
+            tags: ["React", "HTML/CSS", "filler", "filler", "filler", "filler"],
+            bio: "beginner hacker interested in product design"
+        },
+    ];
+
+    const filtProf = 
+        selectedTags.length === 0
+        ? profiles 
+        : profiles.filter((profile) =>
+            selectedTags.every((tag) => profile.tags.includes(tag))
+        );
+
 return (
-<>
+<Box minH="100vh" bg="linear-gradient(to right, #9CE8FF, #F2B0DE)">
     <Drawer.Root open={open} onOpenChange={(e) => setOpen(e.open)} closeOnInteractOutside={false}>
-      <DrawerContainer ref={portalRef}>
-        <Box mt={6}>
-            <Dashboard />
+
+        <Box position="relative">
+            <Box position="absolute" top={48} left={40} zIndex={2}>
+                <Drawer.Trigger asChild>
+                    <Button variant="subtle" size="md" bg="#28a4fc" color="white" fontWeight={"semibold"}>
+                    Filter by Tags
+                    </Button>
+                </Drawer.Trigger>
+            </Box>
+
+            <Dashboard profiles={filtProf}/>
         </Box>
 
-        <Drawer.Trigger asChild>
-          <Button variant="subtle" size="md" bg="#28a4fc" color="white" fontWeight={"semibold"}>
-            Filter
-          </Button>
-        </Drawer.Trigger>
-      </DrawerContainer>
       <Portal container={portalRef}>
         <Drawer.Backdrop pos="absolute" boxSize="full" />
         <Drawer.Positioner pos="absolute" boxSize="full">
@@ -285,7 +353,10 @@ return (
                                 </TreeView.BranchControl>  
                             ) : (
                                 <TreeView.Item>
-                                    <TreeNodeCheckbox />
+                                    <TreeNodeCheckbox 
+                                        checked={selectedTags.includes(node.id)}
+                                        onChange={() => handleCheck(node.id)}
+                                    />
                                     <TreeView.ItemText>
                                         <Highlight
                                             query={[query]}
@@ -312,6 +383,6 @@ return (
       </Portal>
     </Drawer.Root>
 
-    </>
+    </Box>
   );
 }
