@@ -65,4 +65,7 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
+/* Ensure pages can paint their own backgrounds */
+:root, body, #root {
+  background: transparent !important;
 }

@@ -1,6 +1,8 @@
-import { Box, Flex, HStack, Text, Wrap, WrapItem } from "@chakra-ui/react";
-import { useState } from "react";
+import { Box, Flex, HStack, Text } from "@chakra-ui/react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import CreatableSelect from "react-select/creatable";
+
 
 const BuildProfileSkills = () => {
   const navigate = useNavigate();
@@ -10,6 +12,16 @@ const BuildProfileSkills = () => {
   const [tools, setTools] = useState<string[]>([]);
   const [interests, setInterests] = useState<string[]>([]);
 
+  // Load saved data when component mounts
+  useEffect(() => {
+    const savedLanguages = JSON.parse(localStorage.getItem('skills.languages') || '[]');
+    const savedTools = JSON.parse(localStorage.getItem('skills.tools') || '[]');
+    const savedInterests = JSON.parse(localStorage.getItem('skills.interests') || '[]');
+    
+    setLanguages(savedLanguages);
+    setTools(savedTools);
+    setInterests(savedInterests);
+  }, []);
   // Options
   const languageOptions = ["Python", "JavaScript", "C++", "Java", "TypeScript", "HTML/CSS"];
   const toolOptions = ["GitHub", "Figma", "Firebase", "VS Code", "React", "Node.js"];
@@ -24,21 +36,52 @@ const BuildProfileSkills = () => {
     "Productivity",
   ];
 
-  // Toggle selection helper
-  const toggleSelection = (
-    item: string,
-    selected: string[],
-    setSelected: React.Dispatch<React.SetStateAction<string[]>>
-  ) => {
-    if (selected.includes(item)) {
-      setSelected(selected.filter((i) => i !== item));
-    } else {
-      setSelected([...selected, item]);
-    }
+  type Option = { label: string; value: string };
+  const toOptions = (items: string[]): Option[] => items.map((i) => ({ label: i, value: i }));
+  const fromOptions = (options: readonly Option[] | null): string[] => (options ?? []).map((o) => o.value);
+
+  const selectStyles = {
+    control: (base: any) => ({
+      ...base,
+      border: "none",
+      boxShadow: "none",
+      backgroundColor: "transparent",
+      minHeight: 44,
+    }),
+    valueContainer: (base: any) => ({ ...base, paddingLeft: 0 }),
+    multiValue: (base: any) => ({
+      ...base,
+      background: "white",
+      borderRadius: 999,
+      paddingLeft: 6,
+    }),
+    multiValueLabel: (base: any) => ({ ...base, color: "#1a202c" }),
+    multiValueRemove: (base: any) => ({ ...base, ':hover': { background: 'transparent', color: '#1a202c' } }),
+    placeholder: (base: any) => ({ ...base, color: 'rgba(0,0,0,0.6)' }),
+    indicatorsContainer: (base: any) => ({ ...base, display: 'none' }),
+    input: (base: any) => ({ ...base, color: '#1a202c' }),
+    menu: (base: any) => ({ ...base, zIndex: 5, backgroundColor: 'white' }),
+    option: (base: any, state: any) => ({
+      ...base,
+      color: '#1a202c',
+      backgroundColor: state.isFocused ? '#EDF2F7' : 'white',
+      ':hover': {
+        backgroundColor: '#EDF2F7',
+      }
+    }),
+    singleValue: (base: any) => ({ ...base, color: '#1a202c' }),
+  } as const;
+
+  const saveSkillsData = () => {
+    localStorage.setItem('skills.languages', JSON.stringify(languages));
+    localStorage.setItem('skills.tools', JSON.stringify(tools));
+    localStorage.setItem('skills.interests', JSON.stringify(interests));
+    console.log("Skills data saved:", { languages, tools, interests });
   };
 
   return (
-    <Box w="100vw" h="100vh" bg="white">
+    <Box w="100vw" minH="100vh" bg="white">
+
       {/* Top Navigation Tabs */}
       <Flex
         bg="#5A5EA7"
@@ -48,7 +91,8 @@ const BuildProfileSkills = () => {
         color="white"
         fontWeight="bold"
       >
-        <HStack spacing={16}>
+        <HStack gap={16}>
+
           {["Start", "Skills", "Roles", "Personality", "Status"].map((tab) => (
             <Text
               key={tab}
@@ -60,11 +104,12 @@ const BuildProfileSkills = () => {
                 transform: "scale(1.1)",
               }}
               onClick={() => {
-                if (tab === "Skills") {
-                  navigate("/build-profile-skills"); // ✅ dash version
-                } else {
-                  navigate(`/build-profile/${tab.toLowerCase()}`);
-                }
+                if (tab === "Start") navigate("/build/start");
+                if (tab === "Skills") navigate("/build/skills");
+                if (tab === "Roles") navigate("/build/roles");
+                if (tab === "Personality") navigate("/build/personality");
+                if (tab === "Status") navigate("/build/status");
+
               }}
               style={{
                 textDecoration: tab === "Skills" ? "underline" : "none",
@@ -77,44 +122,31 @@ const BuildProfileSkills = () => {
       </Flex>
 
       {/* Main Content */}
-      <Flex px={12} py={8} direction="column" gap={8} align="center">
+      <Flex px={12} py={8} direction="column" gap={8} align="center" pb={12}>
+
         {/* Title */}
         <Text fontSize="2xl" fontWeight="bold" color="black">
           Select Your Skills & Interests
         </Text>
         <Text maxW="600px" textAlign="center" color="black">
-          We’ll do our best to find people who complement your existing skills & who are just as excited about a specific topic!
+          We'll do our best to find people who complement your existing skills & who are just as excited about a specific topic!
         </Text>
 
-        {/* Languages */}
+        {/* Languages - Figma bar with chips and search */}
+
         <Box bg="#F7C6E0" p={4} borderRadius="md" w="100%" maxW="600px">
           <Text fontWeight="bold" mb={2} color="black">
             Programming Languages
           </Text>
-          <Wrap>
-            {languageOptions.map((lang) => (
-              <WrapItem key={lang}>
-                <Box
-                  px={3}
-                  py={1}
-                  borderRadius="md"
-                  cursor="pointer"
-                  bg={languages.includes(lang) ? "blue.500" : "white"}
-                  color={languages.includes(lang) ? "white" : "black"}
-                  border="1px solid"
-                  borderColor="gray.300"
-                  _hover={{
-                    bg: languages.includes(lang) ? "blue.600" : "gray.100",
-                  }}
-                  onClick={() =>
-                    toggleSelection(lang, languages, setLanguages)
-                  }
-                >
-                  {lang}
-                </Box>
-              </WrapItem>
-            ))}
-          </Wrap>
+          <CreatableSelect
+            isMulti
+            options={toOptions(languageOptions)}
+            value={toOptions(languages)}
+            onChange={(opts) => setLanguages(fromOptions(opts))}
+            placeholder="Search or add languages..."
+            styles={selectStyles}
+          />
+
         </Box>
 
         {/* Tools */}
@@ -122,28 +154,15 @@ const BuildProfileSkills = () => {
           <Text fontWeight="bold" mb={2} color="black">
             Tools
           </Text>
-          <Wrap>
-            {toolOptions.map((tool) => (
-              <WrapItem key={tool}>
-                <Box
-                  px={3}
-                  py={1}
-                  borderRadius="md"
-                  cursor="pointer"
-                  bg={tools.includes(tool) ? "blue.500" : "white"}
-                  color={tools.includes(tool) ? "white" : "black"}
-                  border="1px solid"
-                  borderColor="gray.300"
-                  _hover={{
-                    bg: tools.includes(tool) ? "blue.600" : "gray.100",
-                  }}
-                  onClick={() => toggleSelection(tool, tools, setTools)}
-                >
-                  {tool}
-                </Box>
-              </WrapItem>
-            ))}
-          </Wrap>
+          <CreatableSelect
+            isMulti
+            options={toOptions(toolOptions)}
+            value={toOptions(tools)}
+            onChange={(opts) => setTools(fromOptions(opts))}
+            placeholder="Search or add tools..."
+            styles={selectStyles}
+          />
+
         </Box>
 
         {/* Interests */}
@@ -151,32 +170,15 @@ const BuildProfileSkills = () => {
           <Text fontWeight="bold" mb={2} color="black">
             Interests
           </Text>
-          <Wrap>
-            {interestOptions.map((interest) => (
-              <WrapItem key={interest}>
-                <Box
-                  px={3}
-                  py={1}
-                  borderRadius="md"
-                  cursor="pointer"
-                  bg={interests.includes(interest) ? "blue.500" : "white"}
-                  color={interests.includes(interest) ? "white" : "black"}
-                  border="1px solid"
-                  borderColor="gray.300"
-                  _hover={{
-                    bg: interests.includes(interest)
-                      ? "blue.600"
-                      : "gray.100",
-                  }}
-                  onClick={() =>
-                    toggleSelection(interest, interests, setInterests)
-                  }
-                >
-                  {interest}
-                </Box>
-              </WrapItem>
-            ))}
-          </Wrap>
+          <CreatableSelect
+            isMulti
+            options={toOptions(interestOptions)}
+            value={toOptions(interests)}
+            onChange={(opts) => setInterests(fromOptions(opts))}
+            placeholder="Search or add interests..."
+            styles={selectStyles}
+          />
+
         </Box>
 
         {/* Buttons */}
@@ -191,12 +193,8 @@ const BuildProfileSkills = () => {
             fontWeight="semibold"
             _hover={{ bg: "#4E529E" }}
             cursor="pointer"
-            onClick={() => {
-              console.log("Languages:", languages);
-              console.log("Tools:", tools);
-              console.log("Interests:", interests);
-            }}
-          >
+            onClick={saveSkillsData}
+
             Save
           </Box>
 
@@ -208,7 +206,11 @@ const BuildProfileSkills = () => {
             py={3}
             _hover={{ textDecoration: "underline" }}
             cursor="pointer"
-            onClick={() => navigate("/build-profile/roles")}
+            onClick={() => {
+              saveSkillsData();
+              navigate("/build/roles");
+            }}
+
           >
             Next →
           </Box>
