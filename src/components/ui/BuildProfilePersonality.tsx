@@ -1,6 +1,9 @@
 import { Box, Flex, Text, Heading, VStack, HStack, Button } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { doc, updateDoc } from "firebase/firestore";
+import { auth, db } from "../../firebase";
+import type { UserProfile } from "../../types/types"
 
 const ALL_OPTIONS = [
   "Collaborative • loves brainstorming",
@@ -45,9 +48,24 @@ const BuildProfilePersonality = () => {
     );
   };
 
-  const savePersonalityData = () => {
+  const savePersonalityToFirestore = async (personalityTags: Pick<UserProfile, "personality">) => {
+    if (!auth.currentUser) throw new Error("No authenticated user");
+
+    try {
+      const userDocRef = doc(db, "users", auth.currentUser.uid);
+    await updateDoc(userDocRef, {
+      personality: personalityTags || [],
+    });
+    console.log("Personality updated");
+  } catch (error) {
+    console.error("Error updating personality:", error);
+  }
+  }
+  const savePersonalityData = async () => {
     localStorage.setItem('personality.tags', JSON.stringify(selected));
     console.log("Personality data saved:", selected);
+
+    await savePersonalityToFirestore({personality: selected});
   };
 
   return (
@@ -141,7 +159,9 @@ const BuildProfilePersonality = () => {
             borderRadius="md"
             fontWeight="semibold"
             _hover={{ bg: "#4E529E" }}
-            onClick={savePersonalityData}
+            onClick={async () => {
+              await savePersonalityData();
+            }}
           >
             Save
           </Button>
@@ -153,8 +173,8 @@ const BuildProfilePersonality = () => {
             py={3}
             variant="ghost"
             _hover={{ textDecoration: "underline" }}
-            onClick={() => {
-              savePersonalityData();
+            onClick={async () => {
+              await savePersonalityData();
               navigate("/build/status");
             }}
           >

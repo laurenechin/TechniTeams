@@ -3,6 +3,9 @@ import { Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import CreatableSelect from "react-select/creatable";
+import { doc, updateDoc, arrayUnion, getDoc } from "firebase/firestore";
+import { auth, db } from "../../firebase";
+import type { UserProfile } from "../../types/types"
 
 const BuildProfileRoles = () => {
   const navigate = useNavigate();
@@ -77,11 +80,53 @@ const BuildProfileRoles = () => {
     singleValue: (base: any) => ({ ...base, color: '#1a202c' }),
   } as const;
 
-  const saveRolesData = () => {
+  const saveRolesToFirestore = async (rolesData: Pick<UserProfile, "myRoles" | "neededRoles">) => {
+    if (!auth.currentUser) throw new Error("no authenticated user");
+
+    try {
+      const userDocRef = doc(db, "users", auth.currentUser.uid);
+      await updateDoc(userDocRef, {
+        myRoles: rolesData.myRoles || [],
+        neededRoles: rolesData.neededRoles || [],
+      });
+      console.log("roles updated");
+    } catch (error) {
+      console.error("error updating roles:", error);
+    }
+  }
+
+  const saveRolesData = async () => {
     localStorage.setItem('roles.mine', JSON.stringify(myRoles));
     localStorage.setItem('roles.needed', JSON.stringify(neededRoles));
     console.log("Roles data saved:", { myRoles, neededRoles });
+
+    await saveRolesToFirestore({ myRoles, neededRoles });
+
+    await addNewTagsToCategory("myRoles", myRoles);
+    await addNewTagsToCategory("neededRoles", neededRoles);
   };
+
+  async function addNewTagsToCategory(categoryId: string, newTags: string[]) {
+  if (!auth.currentUser) throw new Error("No authenticated user");
+
+  const categoryDocRef = doc(db, "tagCategories", categoryId);
+  try {
+    const categorySnapshot = await getDoc(categoryDocRef);
+    const existingTags: string[] = categorySnapshot.data()?.tags || [];
+
+    // Filter only new tags that don't exist yet
+    const tagsToAdd = newTags.filter(tag => !existingTags.includes(tag));
+
+    if (tagsToAdd.length > 0) {
+      await updateDoc(categoryDocRef, {
+        tags: arrayUnion(...tagsToAdd)
+      });
+      console.log(`Added new tags to ${categoryId}:`, tagsToAdd);
+    }
+  } catch (error) {
+    console.error("Error updating tags:", error);
+  }
+}
 
   return (
     <Box w="100vw" minH="100vh" bg="white">
@@ -199,7 +244,9 @@ const BuildProfileRoles = () => {
             borderRadius="md"
             fontWeight="semibold"
             _hover={{ bg: "#4E529E" }}
-            onClick={saveRolesData}
+            onClick={ async () => {
+              await saveRolesData();
+            }}
           >
             Save
           </Button>
@@ -211,8 +258,8 @@ const BuildProfileRoles = () => {
             py={3}
             variant="ghost"
             _hover={{ textDecoration: "underline" }}
-            onClick={() => {
-              saveRolesData();
+            onClick={ async () => {
+              await saveRolesData();
               navigate("/build/personality");
             }}
           >

@@ -1,20 +1,38 @@
 import { Box, Flex, HStack, Text, VStack, Button } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { auth, db } from "../../firebase";
+import { doc, updateDoc } from "firebase/firestore";
+import type { UserProfile } from "../../types/types"
 
 const BuildProfileStatus = () => {
   const navigate = useNavigate();
-  const [searchingStatus, setSearchingStatus] = useState<string | null>(null);
-  const [ideaStatus, setIdeaStatus] = useState<string | null>(null);
+  const [searchingStatus, setSearchingStatus] = useState<string | undefined>(undefined);
+  const [ideaStatus, setIdeaStatus] = useState<string | undefined>(undefined);
 
   // Load saved data when component mounts
   useEffect(() => {
-    const savedSearchingStatus = localStorage.getItem('status.searching') || null;
-    const savedIdeaStatus = localStorage.getItem('status.idea') || null;
+    const savedSearchingStatus = localStorage.getItem('status.searching') || undefined;
+    const savedIdeaStatus = localStorage.getItem('status.idea') || undefined;
     
     setSearchingStatus(savedSearchingStatus);
     setIdeaStatus(savedIdeaStatus);
   }, []);
+
+  const saveStatusToFirestore = async (statusData: Pick<UserProfile, "searchingStatus" | "ideaStatus">) => {
+  if (!auth.currentUser) throw new Error("No authenticated user");
+
+  try {
+    const userDocRef = doc(db, "users", auth.currentUser.uid);
+    await updateDoc(userDocRef, {
+      searchingStatus: statusData.searchingStatus || "",
+      ideaStatus: statusData.ideaStatus || "",
+    });
+    console.log("Status updated");
+  } catch (error) {
+    console.error("Error updating status:", error);
+  }
+};
 
   return (
     <Box w="100vw" minH="100vh" bg="white">
@@ -133,11 +151,12 @@ const BuildProfileStatus = () => {
             borderRadius="md"
             fontWeight="semibold"
             _hover={{ bg: "#4E529E" }}
-            onClick={() => {
+            onClick={ async () => {
               localStorage.setItem('status.searching', searchingStatus || '');
               localStorage.setItem('status.idea', ideaStatus || '');
               console.log("Searching Status:", searchingStatus);
               console.log("Idea Status:", ideaStatus);
+              await saveStatusToFirestore({ searchingStatus, ideaStatus });
             }}
           >
             Save
@@ -150,9 +169,10 @@ const BuildProfileStatus = () => {
             py={3}
             variant="ghost"
             _hover={{ textDecoration: "underline" }}
-            onClick={() => {
+            onClick={ async () => {
               localStorage.setItem('status.searching', searchingStatus || '');
               localStorage.setItem('status.idea', ideaStatus || '');
+              await saveStatusToFirestore({ searchingStatus, ideaStatus });
               navigate("/build/congrats");
             }}
           >

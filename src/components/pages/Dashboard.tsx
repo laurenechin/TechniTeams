@@ -17,12 +17,13 @@ import {
     Badge, 
     Flex
 } from "@chakra-ui/react";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { LuSquareMinus, LuSquarePlus } from "react-icons/lu"
 import { signOut } from "firebase/auth"
-import { auth } from "../../firebase"
+import { auth, db } from "../../firebase"
 import { useNavigate } from "react-router-dom"
-
+import { collection as firestoreCollection, getDocs } from "firebase/firestore";
+import type { UserProfile } from "../../types/types";
 
 const TreeNodeCheckbox = (props: TreeView.NodeCheckboxProps) => {
     const nodeState = useTreeViewNodeContext()
@@ -48,58 +49,51 @@ interface Node {
     children?: Node[]
 }
 
-const initialCollection = createTreeCollection<Node>({
-    nodeToValue: (node) => node.id,
-    nodeToString: (node) => node.name,
-    rootNode: {
-        id: "ROOT",
-        name: "",
-        children: [
-            {
-                id: "languages",
-                name:"Programming Languages",
-                children: [
-                    { id: "languages/py", name: "Python" },
-                    { id: "languages/js", name: "JavaSript"},
-                    { id: "languages/cpp", name: "C++"},
-                    { id: "languages/java", name: "Java"},
-                    { id: "languages/ts", name: "TypeScript"},
-                    { id: "languages/htmlcss", name: "HTML/CSS"}    
-                ],
-            },
-            {
-                id: "tools",
-                name:"Tools",
-                children: [
-                    { id: "tools/git", name: "GitHub" },
-                    { id: "tools/fig", name: "Figma"},
-                    { id: "tools/firebase", name: "Firebase"},
-                    { id: "tools/vscode", name: "VS Code"},
-                    { id: "tools/react", name: "React"},
-                    { id: "tools/node", name: "Node.js"}    
-                ],
-            },
-            {
-                id: "int",
-                name:"Interests",
-                children: [
-                    { id: "int/bgfriendly", name: "Beginner Friendly" },
-                    { id: "int/retail", name: "E-commerce/Retail"},
-                    { id: "int/enterprise", name: "Enterprise"},
-                    { id: "int/lifehacks", name: "Life Hacks"},
-                    { id: "int/lowcode", name: "Low/No Code"},
-                    { id: "int/mlai", name: "Machine Learning/AI"},
-                    { id: "int/open", name: "Open-Ended"},
-                    { id: "int/prod", name: "Productivity"},
-                    { id: "int/health", name: "Health"}    
-                ],
-            },
-        ]
-    }
-})
+const categoryColors: Record<string, string> = {
+  languages: "#10B981",       
+  tools: "#3B82F6",           
+  myRoles: "#8B5CF6",         
+  interests: "#8B5CF6",        
+  personality: "#EC4899",     
+  searchingStatus: "#F59E0B", 
+  ideaStatus: "#EF4444",      
+  default: "#2970c6ff",       
+};
 
-function ProfileCard({ name, techniEnv, track, tags, bio }: any) {
+function ProfileCard({ name, environment, track, tags, bio }: any) {
     const [showBio, setShowBio] = useState(false);
+
+    const getTagColor = (tag: string) => {
+        const prefix = tag.includes('/') ? tag.split('/')[0] : null;
+        const color = prefix && categoryColors[prefix] ? categoryColors[prefix] : categoryColors.default;
+        return color;
+    };
+
+    const tagDisplayNames: Record<string, string> = {
+    "myRoles/projectmanager": "Project Manager",
+    "myRoles/mobiledeveloper": "Mobile Developer",
+    "interests/ui/uxdesigner": "UI/UX Designer",
+    "interests/ecommerce/retail": "E-Commerce / Retail",
+    "interests/machinelearning/ai": "Machine Learning/AI",
+    "interests/low/nocode": "Low/No Code",
+    };
+
+    function originalTagName(tag: string) {
+        if (tagDisplayNames[tag]) {
+            return tagDisplayNames[tag];
+    }
+
+    if (!tag.includes("/")) return capitalizeWords(tag);
+        const afterSlash = tag.split("/").slice(1).join("/");
+    return capitalizeWords(afterSlash);
+    }
+
+    function capitalizeWords(text: string) {
+        return text
+        .split(/[\s\/]+/) // split on space or slash
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ");
+    }
 
     return (
         <Box
@@ -120,18 +114,21 @@ function ProfileCard({ name, techniEnv, track, tags, bio }: any) {
                 </Avatar.Root>
                 <Text fontWeight={"bold"} textAlign="center" fontSize="lg">{name}</Text>
                 <Text fontSize="md" color="gray.500" textAlign="center">
-                    {techniEnv} | {track}
+                    {environment} | {track}
                 </Text>
 
             </Flex>
                     
            
             <Flex wrap="wrap" gap={2} justify="center" mb={3}>
-                {tags.map((tag: string, index:number) => (
-                    <Badge key={index} bg="#2970c6ff" color="white" fontSize="sm" px={2} py={1} borderRadius="full">
-                        {tag}
-                    </Badge> 
-                ))}
+                {tags.map((tag: string, index:number) => {
+                return (
+                <Badge key={index} bg={getTagColor(tag)} color="white" fontSize="sm" px={2} py={1} borderRadius="full">
+                    {originalTagName(tag)}
+                </Badge>
+                )
+            })}
+
             </Flex>
 
             {showBio && (
@@ -144,7 +141,7 @@ function ProfileCard({ name, techniEnv, track, tags, bio }: any) {
             </Text>
         </Box>
     );
-}
+};
 
 function Dashboard({profiles}: { profiles: any[] }) {
     return (
@@ -171,38 +168,167 @@ function Dashboard({profiles}: { profiles: any[] }) {
     )
 }
 
+const fetchTagCategories = async () => {
+  const querySnapshot = await getDocs(firestoreCollection(db, "tagCategories"));
+  const categories: { id: string; name: string; tags: string[] }[] = [];
+  
+  querySnapshot.forEach(doc => {
+    const data = doc.data();
+    categories.push({
+      id: doc.id,
+      name: data.name,
+      tags: data.tags || []
+    });
+  });
+
+  return categories;
+}
+
+const fixedStatusTags = [
+  {
+    id: "searchingStatus",
+    name: "Searching Status",
+    tags: ["Solo", "Have Small Group"]
+  },
+  {
+    id: "ideaStatus",
+    name: "Idea Status",
+    tags: ["Have an idea", "Open to ideas"]
+  }
+];
+
+const buildTreeCollection = (categories: { id: string; name: string; tags: string[] }[]) => {
+  const filteredCategories = categories.filter(
+    (cat) => cat.id !== "searchingStatus" && cat.id !== "ideaStatus"
+  );
+
+  const mergedCategories = [...filteredCategories, ...fixedStatusTags];
+
+  return createTreeCollection<Node>({
+    nodeToValue: (node) => node.id,
+    nodeToString: (node) => node.name,
+    rootNode: {
+      id: "ROOT",
+      name: "",
+      children: mergedCategories.map((cat) => ({
+        id: cat.id,
+        name: cat.name,
+        children: cat.tags.map((tag) => ({
+            id: `${cat.id}/${tag.toLowerCase().replace(/\s+/g, "")}`,
+            name: tag,
+        })),
+    })),
+    },
+  });
+};
+
 export default function DrawerFeature() {
     const [open, setOpen] = useState(false);
     const [expanded, setExpanded] = useState<string[]>([]);
+    const [profiles, setProfiles] = useState<UserProfile[]>([]);
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
     const portalRef = useRef<HTMLDivElement | null>(null);
-    const [collection, setCollection] = useState(initialCollection)
+    const [tempSelectedTags, setTempSelectedTags] = useState<string[]>([]);
+    const [collection, setCollection] = useState(() =>
+        createTreeCollection<Node>({
+        nodeToValue: (node) => node.id,
+        nodeToString: (node) => node.name,
+        rootNode: { id: "ROOT", name: "", children: [] }
+    })
+);
     const [query, setQuery] = useState("")
 
     const { contains } = useFilter({ sensitivity: "base" })
 
-    const search = (search: string) => {
-        setQuery(search)
-        const nextCollection = initialCollection.filter((node) =>
-        contains(node.name, search),
-        )
-
-        setCollection(nextCollection)
-
-        setExpanded(nextCollection.getBranchValues())
-    }
-
-    const handleToggle = (nodeId: string) => {
-        setExpanded((prev) =>
-        prev.includes(nodeId) ? prev.filter((id) => id !== nodeId) : [...prev, nodeId]
-        );
+    useEffect(() => {
+    const fetchProfiles = async () => {
+      try {
+        const querySnapshot = await getDocs(firestoreCollection(db, "users"));
+        const fetchedProfiles: UserProfile[] = [];
+        
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          fetchedProfiles.push({
+            name: data.name,
+            environment: data.environment,
+            track: data.track,
+            bio: data.bio,
+            languages: data.languages,
+            tools: data.tools,
+            interests: data.interests,
+            myRoles: data.myRoles,
+            neededRoles: data.neededRoles,
+            personality: data.personality,
+            ideaStatus: data.ideaStatus,
+            searchingStatus: data.searchingStatus,
+            profileImage: data.profileImage,
+            tags: [
+                ...(Array.isArray(data.languages) ? data.languages.map((t: string) => `languages/${t.toLowerCase().replace(/\s+/g, "")}`) : []),
+                ...(Array.isArray(data.tools) ? data.tools.map((t: string) => `tools/${t.toLowerCase().replace(/\s+/g, "")}`) : []),
+                ...(Array.isArray(data.interests) ? data.interests.map((t: string) => `interests/${t.toLowerCase().replace(/\s+/g, "")}`) : []),
+                ...(Array.isArray(data.myRoles) ? data.myRoles.map((t: string) => `myRoles/${t.toLowerCase().replace(/\s+/g, "")}`) : []),
+                ...(Array.isArray(data.personality) ? data.personality.map((t: string) => `personality/${t.toLowerCase().replace(/\s+/g, "")}`) : []),
+                ...(Array.isArray(data.ideaStatus) ? data.ideaStatus.map((t: string) => `ideaStatus/${t.toLowerCase().replace(/\s+/g, "")}`) : []),
+                ...(Array.isArray(data.searchingStatus) ? data.searchingStatus.map((t: string) => `searchingStatus/${t.toLowerCase().replace(/\s+/g, "")}`) : []),
+            ]
+          });
+        });
+        
+        setProfiles(fetchedProfiles);
+      } catch (error) {
+        console.error("Error fetching profiles:", error);
+      }
     };
 
-    const handleCheck = (tagId: string) => {
-        setSelectedTags((prev) =>
-        prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId]
-        );
+    fetchProfiles();
+  }, []);
+
+    useEffect(() => {
+        const loadTags = async () => {
+            try {
+                const categories = await fetchTagCategories();
+                const newCollection = buildTreeCollection(categories);
+                setCollection(newCollection);
+                setExpanded(newCollection.getBranchValues());
+            } catch (error) {
+                console.error("Failed to load tag categories:", error);
+            }
+  };
+  loadTags();
+}, []);
+
+    const search = (searchTerm: string) => {
+        setQuery(searchTerm);
+
+        const nextCollection = collection.filter(node => contains(node.name, searchTerm));
+
+        setCollection(nextCollection);
+        setExpanded(nextCollection.getBranchValues());
     };
+
+    console.log("Selected Tags:", selectedTags);
+    console.log("Profiles sample tags:", profiles[0]?.tags);
+
+    const filtProf = selectedTags.length === 0
+    ? profiles
+    : profiles.filter(profile =>
+      selectedTags.every(selTag => {
+        const selTagSuffix = selTag.includes("/")
+          ? selTag.split("/").slice(1).join("/").toLowerCase().trim()
+          : selTag.toLowerCase().trim();
+
+        return profile.tags?.some(profileTag => {
+          const profileTagSuffix = profileTag.includes("/")
+            ? profileTag.split("/").slice(1).join("/").toLowerCase().trim()
+            : profileTag.toLowerCase().trim();
+
+          return profileTagSuffix === selTagSuffix;
+        }) ?? false;
+      })
+    );
+
+
+
 
     const navigate = useNavigate();
 
@@ -214,100 +340,6 @@ export default function DrawerFeature() {
             alert(error.message)
         }
     };
-
-    const profiles = [
-        {
-            name: "Lauren Chin",
-            techniEnv: "In-Person",
-            track: "Beginner",
-            tags: ["React", "HTML/CSS"],
-            bio: "beginner hacker interested in product design"
-        },
-        {
-            name: "Lauren Chin",
-            techniEnv: "In-Person",
-            track: "Beginner",
-            tags: ["React", "HTML/CSS", "filler", "filler", "filler", "filler"],
-            bio: "beginner hacker interested in product design"
-        },
-        {
-            name: "Lauren Chin",
-            techniEnv: "In-Person",
-            track: "Beginner",
-            tags: ["React", "HTML/CSS"],
-            bio: "beginner hacker interested in product design"
-        },
-        {
-            name: "Lauren Chin",
-            techniEnv: "In-Person",
-            track: "Beginner",
-            tags: ["React", "HTML/CSS", "filler", "filler", "filler", "filler"],
-            bio: "beginner hacker interested in product design"
-        },
-        {
-            name: "Lauren Chin",
-            techniEnv: "In-Person",
-            track: "Beginner",
-            tags: ["React", "HTML/CSS", "filler", "filler", "filler", "filler"],
-            bio: "beginner hacker interested in product design"
-        },
-        {
-            name: "Lauren Chin",
-            techniEnv: "In-Person",
-            track: "Beginner",
-            tags: ["React", "HTML/CSS", "filler", "filler", "filler", "filler"],
-            bio: "beginner hacker interested in product design"
-        },
-        {
-            name: "Lauren Chin",
-            techniEnv: "In-Person",
-            track: "Beginner",
-            tags: ["React", "HTML/CSS", "filler", "filler", "filler", "filler"],
-            bio: "beginner hacker interested in product design"
-        },
-        {
-            name: "Lauren Chin",
-            techniEnv: "In-Person",
-            track: "Beginner",
-            tags: ["React", "HTML/CSS", "filler", "filler", "filler", "filler"],
-            bio: "beginner hacker interested in product design"
-        },
-        {
-            name: "Lauren Chin",
-            techniEnv: "In-Person",
-            track: "Beginner",
-            tags: ["React", "HTML/CSS", "filler", "filler", "filler", "filler"],
-            bio: "beginner hacker interested in product design"
-        },
-        {
-            name: "Lauren Chin",
-            techniEnv: "In-Person",
-            track: "Beginner",
-            tags: ["React", "HTML/CSS", "filler", "filler", "filler", "filler"],
-            bio: "beginner hacker interested in product design"
-        },
-        {
-            name: "Lauren Chin",
-            techniEnv: "In-Person",
-            track: "Beginner",
-            tags: ["React", "HTML/CSS", "filler", "filler", "filler", "filler"],
-            bio: "beginner hacker interested in product design"
-        },
-        {
-            name: "Lauren Chin",
-            techniEnv: "In-Person",
-            track: "Beginner",
-            tags: ["React", "HTML/CSS", "filler", "filler", "filler", "filler"],
-            bio: "beginner hacker interested in product design"
-        },
-    ];
-
-    const filtProf = 
-        selectedTags.length === 0
-        ? profiles 
-        : profiles.filter((profile) =>
-            selectedTags.every((tag) => profile.tags.includes(tag))
-        );
 
 return (
 <Box minH="100vh" bg="linear-gradient(to right, #9CE8FF, #F2B0DE)">
@@ -332,6 +364,19 @@ return (
                     fontWeight={"semibold"}>
                     Log Out
                     </Button>
+            </Box>
+            
+            <Box position="absolute" top={6} right={32} zIndex={2}>
+                <Button
+                    onClick={() => navigate("/build/congrats")}
+                    variant="subtle"
+                    size="md"
+                    bg="#137b5cff"
+                    color="white"
+                    fontWeight="semibold"
+                >
+                    See Profile
+                </Button>
             </Box>
 
             <Dashboard profiles={filtProf}/>
@@ -359,12 +404,12 @@ return (
                     collection={collection} 
                     maxW="sm" 
                     defaultCheckedValue={[]}
-                    checkedValue={selectedTags}
-                    onCheckedChange={(details) => {
-                        setSelectedTags(details.checkedValue as string[]);
-                    }}
                     expandedValue={expanded}
                     onExpandedChange={(details) => setExpanded(details.expandedValue)}
+                    checkedValue={tempSelectedTags}
+                    onCheckedChange={(details) => {
+                    setTempSelectedTags(details.checkedValue as string[]);
+  }}
                 >
                     <TreeView.Label>Tag Category</TreeView.Label>
                     <TreeView.Tree>
@@ -403,8 +448,14 @@ return (
 
             </Drawer.Body>
             <Drawer.Footer>
-              <Button variant="outline">Cancel</Button>
-              <Button>Apply</Button>
+              <Button variant="outline"
+                onClick={() => {
+                    setSelectedTags([]);
+                  }}>Clear</Button>
+              <Button onClick={() => {
+                    setSelectedTags(tempSelectedTags);
+                    setOpen(false);
+                }}>Apply</Button>
             </Drawer.Footer>
           </Drawer.Content>
         </Drawer.Positioner>
