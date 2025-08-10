@@ -194,9 +194,9 @@ const BuildProfileSkills = () => {
             _hover={{ bg: "#4E529E" }}
             cursor="pointer"
             onClick={saveSkillsData}
-
+          >
             Save
-          </Box>
+          </ Box>
 
           <Box
             as="button"
@@ -210,7 +210,6 @@ const BuildProfileSkills = () => {
               saveSkillsData();
               navigate("/build/roles");
             }}
-
           >
             Next →
           </Box>

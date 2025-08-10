@@ -3,7 +3,7 @@ import { useNavigate, Link as RouterLink } from "react-router-dom"
 import { createUserWithEmailAndPassword } from "firebase/auth"
 import { setDoc, doc } from "firebase/firestore"
 import { auth, db } from "../../firebase"
-import type { UserData } from "../types"
+import type { UserData } from "../../types/types"
 
 import { Box, Field, Input, Text, Button, VStack, Heading, HStack, Link as ChakraLink} from "@chakra-ui/react"
 import { FiMail, FiLock } from "react-icons/fi"

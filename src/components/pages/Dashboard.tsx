@@ -19,6 +19,10 @@ import {
 } from "@chakra-ui/react";
 import { useState, useRef } from "react";
 import { LuSquareMinus, LuSquarePlus } from "react-icons/lu"
+import { signOut } from "firebase/auth"
+import { auth } from "../../firebase"
+import { useNavigate } from "react-router-dom"
+
 
 const TreeNodeCheckbox = (props: TreeView.NodeCheckboxProps) => {
     const nodeState = useTreeViewNodeContext()
@@ -200,6 +204,17 @@ export default function DrawerFeature() {
         );
     };
 
+    const navigate = useNavigate();
+
+    const handleLogout = async () => {
+        try {
+            await signOut(auth);
+            navigate("/login")
+        } catch (error: any) {
+            alert(error.message)
+        }
+    };
+
     const profiles = [
         {
             name: "Lauren Chin",
@@ -307,6 +322,18 @@ return (
                 </Drawer.Trigger>
             </Box>
 
+             <Box position="absolute" top={6} right={6} zIndex={2}>
+                    <Button 
+                    onClick={handleLogout}
+                    variant="subtle" 
+                    size="md" 
+                    bg="#b71a63ff" 
+                    color="white" 
+                    fontWeight={"semibold"}>
+                    Log Out
+                    </Button>
+            </Box>
+
             <Dashboard profiles={filtProf}/>
         </Box>
 
@@ -332,6 +359,10 @@ return (
                     collection={collection} 
                     maxW="sm" 
                     defaultCheckedValue={[]}
+                    checkedValue={selectedTags}
+                    onCheckedChange={(details) => {
+                        setSelectedTags(details.checkedValue as string[]);
+                    }}
                     expandedValue={expanded}
                     onExpandedChange={(details) => setExpanded(details.expandedValue)}
                 >
@@ -353,10 +384,7 @@ return (
                                 </TreeView.BranchControl>  
                             ) : (
                                 <TreeView.Item>
-                                    <TreeNodeCheckbox 
-                                        checked={selectedTags.includes(node.id)}
-                                        onChange={() => handleCheck(node.id)}
-                                    />
+                                    <TreeNodeCheckbox />
                                     <TreeView.ItemText>
                                         <Highlight
                                             query={[query]}

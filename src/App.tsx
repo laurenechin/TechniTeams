@@ -14,7 +14,6 @@ import BuildProfileCongrats from "./components/ui/BuildProfileCongrats";
 function App() {
 
   return (
-    <Router>
       <Routes>
         <Route path="/" element={<DashboardPage />} />
         <Route path="/login" element={<LogInPage />} />
@@ -28,7 +27,6 @@ function App() {
         <Route path="/build/status" element={<BuildProfileStatus />} />
         <Route path="/build/congrats" element={<BuildProfileCongrats />} />
       </Routes>
-    </Router>
   ) 
 }
 
