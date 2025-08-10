@@ -66,6 +66,7 @@ const BuildProfileStart = () => {
     console.log("Profile data saved:", { name, track, environment, bio });
   };
 
+
   return (
     <Box w="100vw" h="100vh" bg="white">
       {/* Top Navigation Tabs */}
@@ -304,6 +305,7 @@ const BuildProfileStart = () => {
             </Box>
           </Flex>
         </Box>
+
       </Flex>
     </Box>
   );

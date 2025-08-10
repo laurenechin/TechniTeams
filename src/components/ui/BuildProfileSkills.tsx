@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import CreatableSelect from "react-select/creatable";
 
+
 const BuildProfileSkills = () => {
   const navigate = useNavigate();
 
@@ -21,7 +22,6 @@ const BuildProfileSkills = () => {
     setTools(savedTools);
     setInterests(savedInterests);
   }, []);
-
   // Options
   const languageOptions = ["Python", "JavaScript", "C++", "Java", "TypeScript", "HTML/CSS"];
   const toolOptions = ["GitHub", "Figma", "Firebase", "VS Code", "React", "Node.js"];
@@ -81,6 +81,7 @@ const BuildProfileSkills = () => {
 
   return (
     <Box w="100vw" minH="100vh" bg="white">
+
       {/* Top Navigation Tabs */}
       <Flex
         bg="#5A5EA7"
@@ -91,6 +92,7 @@ const BuildProfileSkills = () => {
         fontWeight="bold"
       >
         <HStack gap={16}>
+
           {["Start", "Skills", "Roles", "Personality", "Status"].map((tab) => (
             <Text
               key={tab}
@@ -107,6 +109,7 @@ const BuildProfileSkills = () => {
                 if (tab === "Roles") navigate("/build/roles");
                 if (tab === "Personality") navigate("/build/personality");
                 if (tab === "Status") navigate("/build/status");
+
               }}
               style={{
                 textDecoration: tab === "Skills" ? "underline" : "none",
@@ -120,6 +123,7 @@ const BuildProfileSkills = () => {
 
       {/* Main Content */}
       <Flex px={12} py={8} direction="column" gap={8} align="center" pb={12}>
+
         {/* Title */}
         <Text fontSize="2xl" fontWeight="bold" color="black">
           Select Your Skills & Interests
@@ -129,6 +133,7 @@ const BuildProfileSkills = () => {
         </Text>
 
         {/* Languages - Figma bar with chips and search */}
+
         <Box bg="#F7C6E0" p={4} borderRadius="md" w="100%" maxW="600px">
           <Text fontWeight="bold" mb={2} color="black">
             Programming Languages
@@ -141,6 +146,7 @@ const BuildProfileSkills = () => {
             placeholder="Search or add languages..."
             styles={selectStyles}
           />
+
         </Box>
 
         {/* Tools */}
@@ -156,6 +162,7 @@ const BuildProfileSkills = () => {
             placeholder="Search or add tools..."
             styles={selectStyles}
           />
+
         </Box>
 
         {/* Interests */}
@@ -171,6 +178,7 @@ const BuildProfileSkills = () => {
             placeholder="Search or add interests..."
             styles={selectStyles}
           />
+
         </Box>
 
         {/* Buttons */}
@@ -186,7 +194,7 @@ const BuildProfileSkills = () => {
             _hover={{ bg: "#4E529E" }}
             cursor="pointer"
             onClick={saveSkillsData}
-          >
+
             Save
           </Box>
 
@@ -202,6 +210,7 @@ const BuildProfileSkills = () => {
               saveSkillsData();
               navigate("/build/roles");
             }}
+
           >
             Next →
           </Box>
