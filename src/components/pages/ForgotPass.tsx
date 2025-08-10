@@ -1,10 +1,25 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useState } from "react";
+import { sendPasswordResetEmail } from "firebase/auth";
+import { auth } from "../../firebase";
 import { Link as RouterLink } from "react-router-dom"
-import { Box, Field, Input, Text, Button, VStack, Heading, HStack, Link as ChakraLink } from "@chakra-ui/react"
+import { Box, Field, Input, Button, VStack, Heading, HStack, Link as ChakraLink } from "@chakra-ui/react";
 import { FiMail } from "react-icons/fi"
-import { FiLock } from "react-icons/fi"
 
-const Login = () => {
-    return (
+export default function ForgotPassword() {
+  const [email, setEmail] = useState("");
+  const [sent, setSent] = useState(false);
+
+  const handleReset = async () => {
+    try {
+      await sendPasswordResetEmail(auth, email);
+      setSent(true);
+    } catch (error: any) {
+      alert(error.message);
+    }
+  };
+
+return (
         <Box 
             w="100vw" 
             h="100vh"
@@ -27,11 +42,14 @@ const Login = () => {
             >
 
                 <VStack textAlign="center" gap="6">
-                    <Heading as="h1" size="6xl" color="#000000ff" fontWeight="extrabold" pb={10}>
-                        Welcome Back
+                    <Heading as="h1" size="6xl" color="#000000ff" fontWeight="extrabold">
+                        Reset Password 
+                    </Heading>
+                    <Heading as="h2" size="xl" color="#5A5EA7" fontWeight="semibold">
+                        Enter your email
                     </Heading>
 
-                    <Field.Root orientation="horizontal">
+                    <Field.Root orientation="horizontal" mt={20} mb={6}>
                         <Field.Label><FiMail size={40}/></Field.Label>
                         <Input 
                             placeholder="Email Address" 
@@ -40,18 +58,8 @@ const Login = () => {
                             size="2xl"
                             fontSize="xl"
                             fontWeight="semibold"
-                            w="500px"/>
-                    </Field.Root>
-
-                    <Field.Root orientation="horizontal">
-                        <Field.Label><FiLock size={40}/></Field.Label>
-                        <Input 
-                            placeholder="Password" 
-                            bg="white" 
-                            color="black"
-                            size="2xl"
-                            fontSize="xl"
-                            fontWeight="semibold"/>
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)} />
                     </Field.Root>
 
                     <Button
@@ -64,23 +72,18 @@ const Login = () => {
                         borderRadius="lg"
                         shadow="lg"
                         w="250px"
+                        onClick={handleReset}
                     >
-                        Log In
+                        {sent ? "Email Sent!" : "Send Reset Email"}
                     </Button>
 
-                    <Text color="#5A5EA7" fontSize="xl" fontWeight="semibold" mt={16}>
-                        Forgot password?
-                    </Text>
                     <HStack gap={1}>
-                        <Text color="black" fontSize="xl" fontWeight="semibold">Don't have an account?</Text>
-                        <ChakraLink asChild color="#5A5EA7" fontSize="xl" fontWeight="semibold">
-                            <RouterLink to='/signup'>Sign Up</RouterLink>
+                        <ChakraLink asChild color="#5A5EA7" fontSize="xl" fontWeight="semibold" mt={6}>
+                            <RouterLink to="/login">Return to Log In</RouterLink>
                         </ChakraLink>
                     </HStack>
                 </VStack>
             </Box>
         </Box>
-    );
+    )
 };
-
-export default Login;
