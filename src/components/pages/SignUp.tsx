@@ -20,9 +20,9 @@ export default function SignUp() {
                 const defaultData: UserData = { email: email };
                 
                 await setDoc(doc(db, "users", userCred.user.uid), defaultData);
-                console.log("User created, navigating to dashboard...");
+                console.log("User created, navigating to build profile...");
 
-                navigate("/dashboard");
+                navigate("/build/start");
             
             }   catch (error: any) {
                 alert(error.message);

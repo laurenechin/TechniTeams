@@ -138,10 +138,7 @@ const BuildProfileCongrats = () => {
             {profileData.name || "[name]"}
           </Text>
           <Text fontSize="lg" fontWeight="semibold" color="black">
-            {profileData.track || "[track]"}
-          </Text>
-          <Text fontSize="lg" fontWeight="semibold" color="black">
-            | {profileData.environment || "[techni-environment]"}
+            {profileData.environment || "[techni-environment]"} | {profileData.track || "[track]"}
           </Text>
         </VStack>
 

@@ -2,7 +2,9 @@ import { Box, Flex, HStack, Text } from "@chakra-ui/react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import CreatableSelect from "react-select/creatable";
-
+import { doc, updateDoc, arrayUnion, getDoc } from "firebase/firestore";
+import { auth, db } from "../../firebase";
+import type { UserProfile } from "../../types/types"
 
 const BuildProfileSkills = () => {
   const navigate = useNavigate();
@@ -72,12 +74,59 @@ const BuildProfileSkills = () => {
     singleValue: (base: any) => ({ ...base, color: '#1a202c' }),
   } as const;
 
-  const saveSkillsData = () => {
+  const saveSkillsToFirestore = async (profileData: Pick<UserProfile, 'languages' | 'tools' | 'interests'>) => {
+    if (!auth.currentUser) throw new Error ("No authenticated user");
+
+    try {
+      const userDocRef = doc(db, "users", auth.currentUser.uid);
+      await updateDoc(userDocRef, {
+        languages: profileData.languages || [],
+        tools: profileData.tools || [],
+        interests: profileData.interests || [],
+      });
+      console.log("skills and interests updated")
+    } catch (error) {
+      console.error("error updating skills:", error);
+    }
+  }
+  const saveSkillsData = async () => {
     localStorage.setItem('skills.languages', JSON.stringify(languages));
     localStorage.setItem('skills.tools', JSON.stringify(tools));
     localStorage.setItem('skills.interests', JSON.stringify(interests));
     console.log("Skills data saved:", { languages, tools, interests });
+
+    try {
+      await saveSkillsToFirestore({ languages, tools, interests });
+    } catch (error) {
+      console.error("failed to save skills to firestore", error)
+    }
+    
+    await addNewTagsToCategory("languages", languages);
+    await addNewTagsToCategory("tools", tools);
+    await addNewTagsToCategory("interests", interests);
   };
+
+  async function addNewTagsToCategory(categoryId: string, newTags: string[]) {
+  if (!auth.currentUser) throw new Error("No authenticated user");
+
+  const categoryDocRef = doc(db, "tagCategories", categoryId);
+  try {
+    const categorySnapshot = await getDoc(categoryDocRef);
+    const existingTags: string[] = categorySnapshot.data()?.tags || [];
+
+    // Filter only new tags that don't exist yet
+    const tagsToAdd = newTags.filter(tag => !existingTags.includes(tag));
+
+    if (tagsToAdd.length > 0) {
+      await updateDoc(categoryDocRef, {
+        tags: arrayUnion(...tagsToAdd)
+      });
+      console.log(`Added new tags to ${categoryId}:`, tagsToAdd);
+    }
+  } catch (error) {
+    console.error("Error updating tags:", error);
+  }
+}
 
   return (
     <Box w="100vw" minH="100vh" bg="white">
@@ -193,7 +242,9 @@ const BuildProfileSkills = () => {
             fontWeight="semibold"
             _hover={{ bg: "#4E529E" }}
             cursor="pointer"
-            onClick={saveSkillsData}
+            onClick={async () => {
+              await saveSkillsData();
+            }}
           >
             Save
           </ Box>

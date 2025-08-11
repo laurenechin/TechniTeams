@@ -8,6 +8,9 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Technica_Circle from "../../assets/Technica_Circle.png";
 import { Image } from "@chakra-ui/react";
+import { auth, db } from "../../firebase";
+import { doc, setDoc } from "firebase/firestore";
+import type { UserProfile } from "../../types/types"
 
 const BuildProfileStart = () => {
   const [name, setName] = useState("");
@@ -58,12 +61,29 @@ const BuildProfileStart = () => {
     localStorage.setItem(`profile.${field}`, value);
   };
 
+  const saveProfileDataToFirestore = async (profileData: UserProfile) => {
+    if (!auth.currentUser) throw new Error("No authenticated user"); 
+
+    try {
+    await setDoc(doc(db, "users", auth.currentUser.uid), profileData, { merge: true });
+    } catch (error: any) {
+    alert(error.message)
+    }
+  } 
   const saveProfileData = () => {
     localStorage.setItem('profile.name', name);
     localStorage.setItem('profile.track', track);
     localStorage.setItem('profile.environment', environment);
     localStorage.setItem('profile.bio', bio);
     console.log("Profile data saved:", { name, track, environment, bio });
+
+    saveProfileDataToFirestore({
+      name,
+      track,
+      environment,
+      bio,
+      profileImage: profileImage || ""
+    });
   };
 
 
